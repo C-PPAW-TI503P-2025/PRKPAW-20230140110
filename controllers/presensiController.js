@@ -87,3 +87,71 @@
  	    res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
  	  }
  	};
+
+exports.deletePresensi = async (req, res) => {
+try {
+	const{id: userId} = req.user;
+	const PresensiId = req.params.id;
+	const recordToDelete = await Presensi.findByPk(PresensiId);
+
+	if(!recordToDelete){
+		return res
+		.status(404)
+		.json({message: "Catatan presensi tidak ditemukan"});
+	}
+	if(recordToDelete.userId!== userId){
+		return res
+		.status(403)
+		.json({message: "Akses ditolak: Anda buka pemilik catatan ini"});
+	}
+	await recordToDelete.destroy();
+	return res
+      .status(200)
+      .json({ message: "Presensi berhasil dihapus" });
+	res.status(204).send();
+} catch (error){
+	res.status(500)
+	.json({message: "Terjadi kesalahan pada server", error: error.message});
+}
+};
+
+exports.updatePresensi = async (req, res) => {
+  try {
+    const presensiId = req.params.id;
+    const { checkIn, checkOut, nama } = req.body;
+    
+    // Validasi input: setidaknya satu field harus ada
+    if (checkIn === undefined && checkOut === undefined && nama === undefined) {
+      return res.status(400).json({
+        message:
+          "Request body tidak berisi data yang valid untuk diupdate (checkIn, checkOut, atau nama).",
+      });
+    }
+
+    const recordToUpdate = await Presensi.findByPk(presensiId);
+    
+    // Cek jika record ditemukan
+    if (!recordToUpdate) {
+      return res
+        .status(404)
+        .json({ message: "Catatan presensi tidak ditemukan." });
+    }
+
+    // Update field jika nilainya ada di request body, jika tidak, gunakan nilai lama
+    recordToUpdate.checkIn = checkIn || recordToUpdate.checkIn;
+    recordToUpdate.checkOut = checkOut || recordToUpdate.checkOut;
+    recordToUpdate.nama = nama || recordToUpdate.nama;
+    
+    // Simpan perubahan ke database
+    await recordToUpdate.save();
+
+    res.json({
+      message: "Data presensi berhasil diperbarui.",
+      data: recordToUpdate,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Terjadi kesalahan pada server", error: error.message });
+  }
+};
