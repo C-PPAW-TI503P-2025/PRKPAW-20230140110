@@ -1,23 +1,28 @@
-const presensiRecords = require("../data/presensiData");
-exports.getDailyReport = (req, res) => {
-  console.log("Controller: Mengambil data laporan harian dari array...");
-  res.json({
-    reportDate: new Date().toLocaleDateString(),
-    data: presensiRecords,
-  });
-};
+const { Presensi, User } = require("../models");
+const { Op } = require("sequelize");
 
-const { Presensi } = require("../models");
-const {Op} = require("sequelize");
+const { format } = require("date-fns-tz");
 
 exports.getDailyReport = async (req, res) => {
   try {
     const { nama } = req.query;
-    let options = { where: {} };
+
+    let options = {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["nama"],
+        },
+      ],
+    };
 
     if (nama) {
-      options.where.nama = {
-        [Op.like]: `%${nama}%`,
+      // Baris ini akan error jika 'Op' tidak diimpor
+      options.include[0].where = {
+        nama: {
+          [Op.like]: `%${nama}%`,
+        },
       };
     }
 

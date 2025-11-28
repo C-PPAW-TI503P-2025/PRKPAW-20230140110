@@ -1,59 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUser(decoded);
+      } catch (error) {
+        console.error("Gagal decode token", error);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Hapus token
-    navigate('/login'); // Kembali ke login
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
-  return (
-    // Latar belakang gradien yang lebih dinamis
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex flex-col items-center justify-center p-4">
-      
-      {/* Kartu utama dengan bayangan dan efek hover */}
-      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md text-center transform transition-all hover:scale-105 duration-300">
-        
-        {/* Ikon SVG (centang) dengan animasi 'bounce' */}
-        <svg 
-          className="w-16 h-16 mx-auto mb-6 text-green-500 animate-bounce" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth="2" 
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          >
-          </path>
-        </svg>
+  // Cek apakah user adalah admin
+  const isAdmin = user && user.role === 'admin';
 
-        <h1 className="text-4xl font-bold text-gray-800 mb-3">
-          Login Berhasil!
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
+      <div className="bg-white p-10 rounded-lg shadow-md text-center w-full max-w-2xl">
+        
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Dashboard
         </h1>
-       
-        <p className="text-lg text-gray-600 mb-10">
-          Selamat datang di zona aman Anda.
+        
+        <p className="text-lg text-gray-600 mb-8">
+          Selamat Datang, <span className="font-semibold text-blue-600">{user ? user.nama : 'User'}</span>!
         </p>
 
-        {/* Tombol Logout yang memenuhi lebar kartu */}
+        {/* Container Tombol Menu */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          
+          {/* Tombol Ke Halaman Presensi (Semua User) */}
+          <button
+            onClick={() => navigate('/presensi')}
+            className="py-4 px-6 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-200 flex flex-col items-center justify-center"
+          >
+            <span className="text-xl mb-1">📅</span>
+            Isi Presensi
+          </button>
+
+          {/* Tombol Ke Halaman Laporan (Hanya Admin) */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/reports')}
+              className="py-4 px-6 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition duration-200 flex flex-col items-center justify-center"
+            >
+              <span className="text-xl mb-1">📊</span>
+              Laporan Admin
+            </button>
+          )}
+        </div>
+
+        {/* Tombol Logout */}
         <button
           onClick={handleLogout}
-          className="w-full py-3 px-6 bg-red-600 text-white font-bold text-lg rounded-lg shadow-md hover:bg-red-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300"
+          className="py-2 px-6 bg-red-500 text-white font-semibold rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full md:w-auto"
         >
           Logout
         </button>
       </div>
-
-      {/* Sedikit footer untuk pemanis */}
-      <footer className="mt-8 text-center text-gray-500 text-sm">
-        <p>Anda telah masuk ke area terproteksi.</p>
-      </footer>
     </div>
   );
 }
