@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const presensiController = require('../controllers/presensiController');
@@ -9,7 +10,7 @@ router.get('/report', reportController.getDailyReport); // Endpoint report
 // Middleware Auth diterapkan untuk semua route di bawah ini
 router.use(authenticateToken);
 
-router.post('/check-in', presensiController.CheckIn);
+router.post('/check-in', [authenticateToken, presensiController.upload.single('image')], presensiController.CheckIn);
 router.post('/check-out', presensiController.CheckOut);
 
 // Aturan Validasi
